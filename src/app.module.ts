@@ -12,7 +12,6 @@ import { LoggerModule } from "nestjs-pino";
       pinoHttp: {
         name: "PINO-LOG",
         level: process.env.NODE_ENV === "production" ? "info" : "debug",
-        // autoLogging: process.env.NODE_ENV !== "test",
         autoLogging: {
           ignore: (req) => process.env.NODE_ENV === "development",
         },

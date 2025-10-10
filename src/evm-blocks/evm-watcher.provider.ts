@@ -6,14 +6,68 @@ import { Cron, CronExpression } from "@nestjs/schedule";
 @Injectable()
 export class EvmWatcherProvider implements OnModuleInit {
   private readonly logger = new Logger(EvmWatcherProvider.name);
-  private readonly pollMs: number;
 
   constructor(
     private readonly config: ConfigService,
     private readonly evmBlocks: EvmBlocksService
   ) {}
 
-  async onModuleInit() {}
+  async onModuleInit() {
+    this.scanTipWindows();
+  }
+
+  @Cron(CronExpression.EVERY_MINUTE)
+  async scanTipWindows() {
+    const clients = (this.evmBlocks as any).clients as
+      | Map<number, any>
+      | undefined;
+    if (!clients || clients.size === 0) {
+      this.logger.debug("No EVM clients configured — skipping tip scan");
+      return;
+    }
+
+    // Loop all clients and delegate work
+    for (const [chainId, client] of clients.entries()) {
+      await this.scanClientTip(chainId, client);
+    }
+  }
+
+  private async scanClientTip(chainId: number, client: any) {
+    const name = client?.chain?.name ?? `chainId=${chainId}`;
+
+    const latest = await this.evmBlocks.getLatest(chainId);
+
+    if (!latest) {
+      this.logger.debug(`[${name}] No blocks in DB yet — skipping`);
+      return;
+    }
+
+    const missing = await this.evmBlocks.findMissingFullRange(chainId);
+
+    const blocksRequests = missing.map((n) => {
+      return client.getBlock({ blockNumber: n });
+    });
+
+    const data = (await Promise.all(blocksRequests)).map((b) => {
+      const mapped = {
+        chainId,
+        number: b.number!,
+        hash: b.hash!,
+        parentHash: b.parentHash!,
+        timestamp: Number(b.timestamp),
+      };
+
+      return mapped;
+    });
+
+    await this.evmBlocks.upsertBlock(data);
+
+    this.logger.log(
+      `[${this.evmBlocks.getClient(chainId).chain?.name}] synced ${missing.join(
+        ", "
+      )}`
+    );
+  }
 
   @Cron(CronExpression.EVERY_5_SECONDS)
   async handleCron() {
@@ -34,13 +88,15 @@ export class EvmWatcherProvider implements OnModuleInit {
 
     const b = await this.evmBlocks.getBlockByNumber(chainId, head);
 
-    await this.evmBlocks.upsertBlock({
-      chainId,
-      number: b.number,
-      hash: b.hash,
-      parentHash: b.parentHash,
-      timestamp: b.timestamp,
-    });
+    await this.evmBlocks.upsertBlock([
+      {
+        chainId,
+        number: b.number,
+        hash: b.hash,
+        parentHash: b.parentHash,
+        timestamp: b.timestamp,
+      },
+    ]);
 
     this.logger.log(
       `[${
