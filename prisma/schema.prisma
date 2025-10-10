@@ -1,0 +1,30 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  // output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model EvmBlock {
+  id BigInt @id @default(autoincrement())
+
+  chainId    Int
+  number     BigInt
+  hash       String
+  parentHash String
+  timestamp  BigInt
+
+  @@unique([chainId, number], map: "uq_evm_chain_number")
+  @@unique([chainId, hash], map: "uq_evm_chain_hash")
+  @@index([chainId, number], map: "idx_evm_chain_number")
+  @@index([chainId, timestamp], map: "idx_evm_chain_timestamp")
+}
