@@ -7,7 +7,11 @@
     "build": "nest build",
     "start": "nest start",
     "start:dev": "nest start --watch",
-    "start:prod": "node ."
+    "start:prod": "node .",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:cov": "jest --coverage",
+    "test:e2e": "jest --config test/jest.e2e.ts"
   },
   "keywords": [],
   "author": "",
@@ -20,6 +24,7 @@
     "@nestjs/schedule": "^6.0.1",
     "@nestjs/swagger": "^11.2.0",
     "@prisma/client": "^6.17.0",
+    "@testcontainers/postgresql": "^11.7.1",
     "class-validator": "^0.14.2",
     "jsbi": "^4.3.2",
     "nestjs-pino": "^4.4.1",
@@ -28,10 +33,21 @@
     "viem": "^2.38.0"
   },
   "devDependencies": {
+    "@faker-js/faker": "^10.0.0",
     "@nestjs/cli": "^11.0.10",
     "@nestjs/schematics": "^11.0.8",
+    "@nestjs/testing": "^11.1.6",
+    "@types/jest": "^30.0.0",
     "@types/node": "^24.7.0",
+    "@types/pg": "^8.11.10",
+    "cross-env": "^10.1.0",
+    "jest": "^30.2.0",
+    "pg": "^8.16.3",
     "prisma": "^6.17.0",
+    "supertest": "^7.1.4",
+    "testcontainers": "^11.7.1",
+    "ts-jest": "^29.4.5",
+    "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
   }
 }

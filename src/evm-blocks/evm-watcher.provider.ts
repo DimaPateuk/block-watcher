@@ -1,7 +1,8 @@
-import { Injectable, Logger, OnModuleInit } from "@nestjs/common";
+import { Injectable, Logger, OnModuleInit, Inject } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { EvmBlocksService } from "../evm-blocks/evm-blocks.service";
 import { Cron, CronExpression } from "@nestjs/schedule";
+import { RPC_SERVICE, RpcService } from "../rpc/rpc.types";
 
 @Injectable()
 export class EvmWatcherProvider implements OnModuleInit {
@@ -9,7 +10,8 @@ export class EvmWatcherProvider implements OnModuleInit {
 
   constructor(
     private readonly config: ConfigService,
-    private readonly evmBlocks: EvmBlocksService
+    private readonly evmBlocks: EvmBlocksService,
+    @Inject(RPC_SERVICE) private readonly rpc: RpcService
   ) {}
 
   async onModuleInit() {
@@ -18,22 +20,24 @@ export class EvmWatcherProvider implements OnModuleInit {
 
   @Cron(CronExpression.EVERY_MINUTE)
   async scanTipWindows() {
-    const clients = (this.evmBlocks as any).clients as
-      | Map<number, any>
-      | undefined;
-    if (!clients || clients.size === 0) {
+    const configuredChainIds = this.rpc.getConfiguredChainIds();
+    if (configuredChainIds.length === 0) {
       this.logger.debug("No EVM clients configured — skipping tip scan");
       return;
     }
 
-    // Loop all clients and delegate work
-    for (const [chainId, client] of clients.entries()) {
-      await this.scanClientTip(chainId, client);
+    // Loop all configured chains and delegate work
+    for (const chainId of configuredChainIds) {
+      try {
+        await this.scanClientTip(chainId);
+      } catch (err: any) {
+        this.logger.error(`[${chainId}] ${err?.message || err}`);
+      }
     }
   }
 
-  private async scanClientTip(chainId: number, client: any) {
-    const name = client?.chain?.name ?? `chainId=${chainId}`;
+  private async scanClientTip(chainId: number) {
+    const name = this.rpc.getChainName(chainId);
 
     const latest = await this.evmBlocks.getLatest(chainId);
 
@@ -43,9 +47,14 @@ export class EvmWatcherProvider implements OnModuleInit {
     }
 
     const missing = await this.evmBlocks.findMissingFullRange(chainId);
+    
+    if (missing.length === 0) {
+      this.logger.debug(`[${name}] No missing blocks found`);
+      return;
+    }
 
     const blocksRequests = missing.map((n) => {
-      return client.getBlock({ blockNumber: n });
+      return this.rpc.getBlockByNumber(chainId, n);
     });
 
     const data = (await Promise.all(blocksRequests)).map((b) => {
@@ -60,21 +69,18 @@ export class EvmWatcherProvider implements OnModuleInit {
       return mapped;
     });
 
-    await this.evmBlocks.upsertBlock(data);
+    await this.evmBlocks.upsertBlocks(data);
 
     this.logger.log(
-      `[${this.evmBlocks.getClient(chainId).chain?.name}] synced ${missing.join(
-        ", "
-      )}`
+      `[${name}] synced ${missing.join(", ")}`
     );
   }
 
   @Cron(CronExpression.EVERY_5_SECONDS)
   async handleCron() {
-    for (const [_, client] of this.evmBlocks.clients) {
-      const chainId = client.chain?.id;
-      if (!chainId) continue;
-
+    const configuredChainIds = this.rpc.getConfiguredChainIds();
+    
+    for (const chainId of configuredChainIds) {
       try {
         await this.tick(chainId);
       } catch (err: any) {
@@ -84,24 +90,23 @@ export class EvmWatcherProvider implements OnModuleInit {
   }
 
   private async tick(chainId: number) {
-    const head = await this.evmBlocks.getHeadNumber(chainId);
+    const head = await this.rpc.getHeadNumber(chainId);
 
-    const b = await this.evmBlocks.getBlockByNumber(chainId, head);
+    const b = await this.rpc.getBlockByNumber(chainId, head);
 
-    await this.evmBlocks.upsertBlock([
+    await this.evmBlocks.upsertBlocks([
       {
         chainId,
-        number: b.number,
-        hash: b.hash,
-        parentHash: b.parentHash,
-        timestamp: b.timestamp,
+        number: b.number!,
+        hash: b.hash!,
+        parentHash: b.parentHash!,
+        timestamp: Number(b.timestamp),
       },
     ]);
 
+    const name = this.rpc.getChainName(chainId);
     this.logger.log(
-      `[${
-        this.evmBlocks.getClient(chainId).chain?.name
-      }] last number is ${head.toString()}`
+      `[${name}] inserted head block ${head.toString()}`
     );
   }
 }
