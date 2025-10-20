@@ -24,8 +24,8 @@ export class HealthController {
   @Get()
   @HealthCheck()
   @ApiOperation({
-    summary: 'Health check endpoint',
-    description: 'Returns the health status of the application and its dependencies'
+    summary: 'General health check endpoint',
+    description: 'Returns the health status of the application and its dependencies (use /liveness or /readiness for K8s probes)'
   })
   @ApiResponse({
     status: 200,
@@ -57,6 +57,62 @@ export class HealthController {
         path: '/', 
         thresholdPercent: 0.9 
       }),
+    ]);
+  }
+
+  @Get('liveness')
+  @HealthCheck()
+  @ApiOperation({
+    summary: 'Liveness probe - is the process functioning?',
+    description: 'Kubernetes liveness probe - checks if process needs restart. Only checks internal process health.'
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Process is alive and functioning'
+  })
+  @ApiResponse({
+    status: 503,
+    description: 'Process is unhealthy and should be restarted'
+  })
+  liveness(): Promise<HealthCheckResult> {
+    return this.health.check([
+      // Only check if the process itself is functional
+      // Memory usage (should be under 2GB for liveness - higher threshold)
+      () => this.memoryHealth.checkHeap('memory_heap', 2 * 1024 * 1024 * 1024),
+      // RSS memory (should be under 2.5GB)
+      () => this.memoryHealth.checkRSS('memory_rss', 2.5 * 1024 * 1024 * 1024),
+      // Do NOT check external dependencies - those are for readiness
+    ]);
+  }
+
+  @Get('readiness')
+  @HealthCheck()
+  @ApiOperation({
+    summary: 'Readiness probe - can the service handle traffic?',
+    description: 'Kubernetes readiness probe - checks if service can serve requests. Includes all dependencies.'
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Service is ready to handle traffic'
+  })
+  @ApiResponse({
+    status: 503,
+    description: 'Service is not ready - dependencies unavailable'
+  })
+  readiness(): Promise<HealthCheckResult> {
+    return this.health.check([
+      // Check all external dependencies required to serve traffic
+      () => this.prismaHealth.pingCheck('database', this.prismaService),
+      // Memory usage (stricter for readiness)
+      () => this.memoryHealth.checkHeap('memory_heap', 1024 * 1024 * 1024),
+      () => this.memoryHealth.checkRSS('memory_rss', 1.5 * 1024 * 1024 * 1024),
+      // Disk usage
+      () => this.diskHealth.checkStorage('storage', { 
+        path: '/', 
+        thresholdPercent: 0.9 
+      }),
+      // TODO: Add RPC connectivity check
+      // TODO: Add block lag check  
     ]);
   }
 

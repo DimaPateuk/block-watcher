@@ -5,6 +5,21 @@ import { collectDefaultMetrics, register, Histogram, Gauge } from 'prom-client';
 export class MetricsService implements OnModuleInit {
   private readonly logger = new Logger(MetricsService.name);
 
+  // Optimized histogram buckets for different I/O types
+  private readonly HTTP_BUCKETS = [0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10]; // Network I/O optimized
+  private readonly DB_BUCKETS = [0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1]; // Local I/O optimized
+  private readonly RPC_BUCKETS = [0.1, 0.25, 0.5, 1, 2, 5, 10, 30]; // Blockchain RPC calls
+
+  // Safe label values to prevent cardinality explosion
+  private readonly SAFE_LABEL_VALUES = {
+    chainId: ['1', '5', '137', '8453', '42161', 'unknown'], // Ethereum, Goerli, Polygon, Base, Arbitrum
+    status: ['success', 'error', 'timeout', 'rate_limited'],
+    operation: ['sync', 'reorg', 'fetch', 'validate', 'process'],
+    pool: ['primary', 'readonly', 'archive'],
+    source: ['rpc', 'cache', 'db', 'memory'],
+    method: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS'],
+  };
+
   // HTTP request duration histogram
   public readonly httpRequestDuration: Histogram<string>;
 
@@ -34,7 +49,7 @@ export class MetricsService implements OnModuleInit {
       name: 'http_server_requests_seconds',
       help: 'Duration of HTTP requests in seconds',
       labelNames: ['method', 'route', 'status_code'],
-      buckets: [0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2, 5],
+      buckets: this.HTTP_BUCKETS, // Network I/O optimized buckets
       registers: [register]
     });
 
@@ -50,7 +65,7 @@ export class MetricsService implements OnModuleInit {
       name: 'db_prisma_query_seconds',
       help: 'Duration of Prisma database queries in seconds',
       labelNames: ['model', 'action', 'success'],
-      buckets: [0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2, 5],
+      buckets: this.DB_BUCKETS, // Local I/O optimized buckets
       registers: [register]
     });
 
@@ -81,11 +96,64 @@ export class MetricsService implements OnModuleInit {
   }
 
   /**
+   * Validate label values to prevent cardinality explosion
+   * @param labels Object containing label key-value pairs
+   * @throws Error if any label has unsafe high-cardinality values
+   */
+  private validateLabels(labels: Record<string, string>): void {
+    Object.entries(labels).forEach(([key, value]) => {
+      if (this.SAFE_LABEL_VALUES[key]) {
+        if (!this.SAFE_LABEL_VALUES[key].includes(value)) {
+          this.logger.warn(`Invalid label value: ${key}=${value}, using 'unknown'`);
+          labels[key] = 'unknown';
+        }
+      }
+      // Check for potentially dangerous patterns
+      if (this.isHighCardinalityValue(value)) {
+        this.logger.warn(`High cardinality label detected: ${key}=${value}, using normalized value`);
+        labels[key] = this.normalizeHighCardinalityValue(key, value);
+      }
+    });
+  }
+
+  /**
+   * Check if a value could cause high cardinality
+   */
+  private isHighCardinalityValue(value: string): boolean {
+    // Check for patterns that indicate high cardinality
+    return (
+      /^0x[a-f0-9]{40,}$/i.test(value) || // Ethereum addresses/hashes
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value) || // UUIDs
+      /^\d{10,}$/.test(value) || // Large numbers (timestamps, IDs)
+      value.length > 20 // Very long strings
+    );
+  }
+
+  /**
+   * Normalize high cardinality values to safe alternatives
+   */
+  private normalizeHighCardinalityValue(key: string, value: string): string {
+    if (/^0x[a-f0-9]{40}$/i.test(value)) return 'address';
+    if (/^0x[a-f0-9]{64}$/i.test(value)) return 'hash';
+    if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value)) return 'uuid';
+    if (/^\d{10,}$/.test(value)) return 'large_number';
+    return 'normalized';
+  }
+
+  /**
    * Record HTTP request duration
    */
   recordHttpRequest(method: string, route: string, statusCode: number, duration: number) {
+    const labels = {
+      method: method.toUpperCase(),
+      route: route,
+      status_code: statusCode.toString(),
+    };
+    
+    this.validateLabels(labels);
+    
     this.httpRequestDuration
-      .labels(method, route, statusCode.toString())
+      .labels(labels.method, labels.route, labels.status_code)
       .observe(duration);
   }
 
@@ -93,8 +161,16 @@ export class MetricsService implements OnModuleInit {
    * Record database query duration
    */
   recordDbQuery(model: string, action: string, success: boolean, duration: number) {
+    const labels = {
+      model: model || 'unknown',
+      action: action || 'unknown', 
+      success: success.toString(),
+    };
+    
+    this.validateLabels(labels);
+    
     this.dbPrismaQueryDuration
-      .labels(model, action, success.toString())
+      .labels(labels.model, labels.action, labels.success)
       .observe(duration);
   }
 

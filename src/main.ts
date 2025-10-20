@@ -6,12 +6,11 @@ import { PrismaService } from "./prisma/prisma.service";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import pkg from "../package.json";
 
-// Polyfill for crypto.randomUUID() if not available (Node.js < 18.19)
-if (!globalThis.crypto) {
-  globalThis.crypto = require('crypto');
-}
-if (!globalThis.crypto.randomUUID) {
-  globalThis.crypto.randomUUID = () => require('crypto').randomUUID();
+// TODO: Remove this polyfill after upgrading to Node.js 20+ LTS
+// @nestjs/schedule still requires crypto.randomUUID() on Node 18.x
+if (!globalThis.crypto?.randomUUID) {
+  const { randomUUID } = require('crypto');
+  globalThis.crypto = { ...globalThis.crypto, randomUUID };
 }
 
 async function bootstrap() {
