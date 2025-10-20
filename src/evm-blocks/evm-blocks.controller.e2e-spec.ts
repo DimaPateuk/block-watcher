@@ -4,6 +4,7 @@ const request = require('supertest');
 import { EvmBlocksController } from './evm-blocks.controller';
 import { EvmBlocksService } from './evm-blocks.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { MetricsService } from '../metrics/metrics.service';
 import { createBlocks } from '../../test/utils/block-gen';
 
 describe('EvmBlocksController E2E', () => {
@@ -19,6 +20,13 @@ describe('EvmBlocksController E2E', () => {
       providers: [
         EvmBlocksService,
         PrismaService,
+        {
+          provide: MetricsService,
+          useValue: {
+            recordDbQuery: jest.fn(),
+            updateConnectionPool: jest.fn(),
+          },
+        },
       ],
     }).compile();
 

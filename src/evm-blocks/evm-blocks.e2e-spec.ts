@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { EvmBlocksService } from './evm-blocks.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { MetricsService } from '../metrics/metrics.service';
 import { RPC_SERVICE } from '../rpc/rpc.types';
 import { 
   createBlocks, 
@@ -24,6 +25,13 @@ describe('EvmBlocksService E2E', () => {
       providers: [
         EvmBlocksService,
         PrismaService,
+        {
+          provide: MetricsService,
+          useValue: {
+            recordDbQuery: jest.fn(),
+            updateConnectionPool: jest.fn(),
+          },
+        },
         {
           provide: RPC_SERVICE,
           useValue: mockRpc,

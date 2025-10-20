@@ -6,6 +6,14 @@ import { PrismaService } from "./prisma/prisma.service";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import pkg from "../package.json";
 
+// Polyfill for crypto.randomUUID() if not available (Node.js < 18.19)
+if (!globalThis.crypto) {
+  globalThis.crypto = require('crypto');
+}
+if (!globalThis.crypto.randomUUID) {
+  globalThis.crypto.randomUUID = () => require('crypto').randomUUID();
+}
+
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { bufferLogs: true });
   app.useLogger(app.get(Logger));

@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { EvmBlocksService } from '../../src/evm-blocks/evm-blocks.service';
 import { EvmWatcherProvider } from '../../src/evm-blocks/evm-watcher.provider';
 import { PrismaService } from '../../src/prisma/prisma.service';
+import { MetricsService } from '../../src/metrics/metrics.service';
 import { RPC_SERVICE } from '../../src/rpc/rpc.types';
 import { MockRpcService } from './rpc-mock';
 
@@ -31,6 +32,14 @@ export class TestModuleProvider {
     const providers: any[] = [
       EvmBlocksService,
       PrismaService,
+      {
+        provide: MetricsService,
+        useValue: {
+          recordDbQuery: jest.fn(),
+          updateConnectionPool: jest.fn(),
+          recordHttpRequest: jest.fn(),
+        },
+      },
       {
         provide: ConfigService,
         useValue: {

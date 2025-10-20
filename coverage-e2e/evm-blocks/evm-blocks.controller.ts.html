@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/20</span>
+                <span class='fraction'>20/20</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/4</span>
+                <span class='fraction'>4/4</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/4</span>
+                <span class='fraction'>4/4</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/16</span>
+                <span class='fraction'>16/16</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line low'></div>
+    <div class='status-line high'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -95,68 +95,68 @@
 <a name='L30'></a><a href='#L30'>30</a>
 <a name='L31'></a><a href='#L31'>31</a>
 <a name='L32'></a><a href='#L32'>32</a>
-<a name='L33'></a><a href='#L33'>33</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<a name='L33'></a><a href='#L33'>33</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">7x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">7x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js"><span class="cstat-no" title="statement not covered" >import { Controller, Get, Param, ParseIntPipe } from "@nestjs/common";</span>
-<span class="cstat-no" title="statement not covered" >import { EvmBlocksService } from "./evm-blocks.service";</span>
-<span class="cstat-no" title="statement not covered" >import { ApiOkResponse, ApiTags } from "@nestjs/swagger";</span>
-<span class="cstat-no" title="statement not covered" >import { EvmBlockDto, toEvmBlockDto } from "./dto/evm-block.dto";</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">10x</span>
+<span class="cline-any cline-yes">10x</span>
+<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { Controller, Get, Param, ParseIntPipe } from "@nestjs/common";
+import { EvmBlocksService } from "./evm-blocks.service";
+import { ApiOkResponse, ApiTags } from "@nestjs/swagger";
+import { EvmBlockDto, toEvmBlockDto } from "./dto/evm-block.dto";
 &nbsp;
 @ApiTags("evm/blocks")
 @Controller("evm/blocks")
-export <span class="cstat-no" title="statement not covered" >class <span class="cstat-no" title="statement not covered" ><span class="cstat-no" title="statement not covered" >EvmBlocksController </span>{</span></span>
-<span class="fstat-no" title="function not covered" >  constructor(private readonly <span class="cstat-no" title="statement not covered" >e</span>vmBlocks: E</span>vmBlocksService) {}
-  @Get("health") <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >getHealth(</span>) {</span>
-<span class="cstat-no" title="statement not covered" >    return { ok: true };</span>
+export class EvmBlocksController {
+  constructor(private readonly evmBlocks: EvmBlocksService) {}
+  @Get("health") getHealth() {
+    return { ok: true };
   }
 &nbsp;
   @Get(":chainId/latest")
   @ApiOkResponse({ type: [EvmBlockDto] })
-  async <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >latest(</span>@Param("chainId", ParseIntPipe) chainId: number) {</span>
-    const res = <span class="cstat-no" title="statement not covered" >await this.evmBlocks.getLatest(chainId);</span>
+  async latest(@Param("chainId", ParseIntPipe) chainId: number) {
+    const res = await this.evmBlocks.getLatest(chainId);
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    if (!res) <span class="cstat-no" title="statement not covered" >return { error: "Not found" };</span></span>
+    if (!res) return { error: "Not found" };
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    return toEvmBlockDto(res);</span>
+    return toEvmBlockDto(res);
   }
   @Get(":chainId/:number")
-  async <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >byNumber(</span></span>
+  async byNumber(
     @Param("chainId", ParseIntPipe) chainId: number,
     @Param("number", ParseIntPipe) number: number
   ) {
-    const res = <span class="cstat-no" title="statement not covered" >await this.evmBlocks.byNumber(chainId, number);</span>
-<span class="cstat-no" title="statement not covered" >    if (!res) <span class="cstat-no" title="statement not covered" >return { error: "Not found" };</span></span>
-<span class="cstat-no" title="statement not covered" >    return toEvmBlockDto(res);</span>
+    const res = await this.evmBlocks.byNumber(chainId, number);
+    if (!res) return { error: "Not found" };
+    return toEvmBlockDto(res);
   }
 }
 &nbsp;</pre></td></tr></table></pre>
@@ -166,7 +166,7 @@ export <span class="cstat-no" title="statement not covered" >class <span class="
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-10-15T09:05:39.322Z
+                at 2025-10-20T17:47:37.837Z
             </div>
         <script src="../prettify.js"></script>
         <script>

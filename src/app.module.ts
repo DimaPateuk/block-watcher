@@ -5,6 +5,8 @@ import { EvmBlocksModule } from "./evm-blocks/evm-blocks.module";
 import { PrismaModule } from "./prisma/prisma.module";
 import { RpcModule } from "./rpc/rpc.module";
 import { LoggerModule } from "nestjs-pino";
+import { MetricsModule } from "./metrics/metrics.module";
+import { HealthModule } from "./health/health.module";
 
 @Module({
   imports: [
@@ -23,6 +25,8 @@ import { LoggerModule } from "nestjs-pino";
     }),
     ConfigModule.forRoot({ isGlobal: true }),
     ScheduleModule.forRoot(),
+    MetricsModule,
+    HealthModule,
     PrismaModule,
     RpcModule,
     EvmBlocksModule,
