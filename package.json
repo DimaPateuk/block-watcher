@@ -11,7 +11,11 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
-    "test:e2e": "jest --config test/jest.e2e.ts"
+    "test:e2e": "jest --config test/jest.e2e.ts",
+    "test:e2e:cov": "jest --config test/jest.e2e.ts --coverage",
+    "test:cov:all": "npm run test:cov && npm run test:e2e:cov",
+    "coverage:open": "open coverage/index.html",
+    "coverage:open:e2e": "open coverage-e2e/index.html"
   },
   "keywords": [],
   "author": "",
