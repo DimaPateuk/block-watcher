@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: block-watcher-service
+  namespace: block-watcher
+  labels:
+    app: block-watcher
+spec:
+  selector:
+    app: block-watcher
+  ports:
+  - name: http
+    port: 80
+    targetPort: 3000
+    protocol: TCP
+  type: ClusterIP
