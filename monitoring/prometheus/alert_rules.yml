@@ -1,0 +1,195 @@
+groups:
+# Block Watcher Application Alerts
+- name: block-watcher-critical
+  rules:
+  - alert: BlockWatcherDown
+    expr: up{job="block-watcher"} == 0
+    for: 1m
+    labels:
+      severity: critical
+      service: block-watcher
+    annotations:
+      summary: "Block Watcher application is down"
+      description: "Block Watcher has been down for more than 1 minute"
+
+  - alert: HighErrorRate
+    expr: |
+      (
+        rate(http_server_requests_seconds_count{status_code=~"5.."}[5m]) /
+        rate(http_server_requests_seconds_count[5m])
+      ) > 0.05
+    for: 2m
+    labels:
+      severity: critical
+      service: block-watcher
+    annotations:
+      summary: "High error rate detected"
+      description: "Error rate is {{ $value | humanizePercentage }} over the last 5 minutes"
+
+  - alert: HighLatency
+    expr: |
+      histogram_quantile(0.95, 
+        rate(http_server_requests_seconds_bucket[5m])
+      ) > 0.5
+    for: 5m
+    labels:
+      severity: warning
+      service: block-watcher
+    annotations:
+      summary: "High HTTP latency detected"
+      description: "95th percentile latency is {{ $value }}s over the last 5 minutes"
+
+  - alert: HighEventLoopLag
+    expr: nodejs_eventloop_lag_seconds > 0.1
+    for: 2m
+    labels:
+      severity: warning
+      service: block-watcher
+    annotations:
+      summary: "High Node.js event loop lag"
+      description: "Event loop lag is {{ $value }}s (>100ms threshold)"
+
+  - alert: HighMemoryUsage
+    expr: |
+      (
+        nodejs_heap_size_used_bytes / 
+        nodejs_heap_size_total_bytes
+      ) > 0.9
+    for: 5m
+    labels:
+      severity: warning
+      service: block-watcher
+    annotations:
+      summary: "High memory usage detected"
+      description: "Heap memory usage is {{ $value | humanizePercentage }}"
+
+# Database Alerts
+- name: database-alerts
+  rules:
+  - alert: DatabaseDown
+    expr: up{job="postgres"} == 0
+    for: 1m
+    labels:
+      severity: critical
+      service: postgresql
+    annotations:
+      summary: "Database is down"
+      description: "PostgreSQL database has been down for more than 1 minute"
+
+  - alert: DatabaseConnectionSaturation
+    expr: |
+      (
+        db_connections_active / 
+        (db_connections_active + db_connections_idle)
+      ) > 0.9
+    for: 5m
+    labels:
+      severity: warning
+      service: block-watcher
+    annotations:
+      summary: "Database connection pool saturation"
+      description: "Connection pool utilization is {{ $value | humanizePercentage }}"
+
+  - alert: SlowDatabaseQueries
+    expr: |
+      histogram_quantile(0.95,
+        rate(db_prisma_query_seconds_bucket[5m])
+      ) > 0.1
+    for: 5m
+    labels:
+      severity: warning
+      service: block-watcher
+    annotations:
+      summary: "Slow database queries detected"
+      description: "95th percentile DB query time is {{ $value }}s"
+
+  - alert: DatabaseQueryErrors
+    expr: |
+      (
+        rate(db_prisma_query_seconds_count{success="false"}[5m]) /
+        rate(db_prisma_query_seconds_count[5m])
+      ) > 0.01
+    for: 2m
+    labels:
+      severity: warning
+      service: block-watcher
+    annotations:
+      summary: "Database query errors detected"
+      description: "Database query error rate is {{ $value | humanizePercentage }}"
+
+# Health Check Alerts
+- name: health-checks
+  rules:
+  - alert: HealthCheckFailed
+    expr: probe_success{job="blackbox-http"} == 0
+    for: 2m
+    labels:
+      severity: critical
+      service: block-watcher
+    annotations:
+      summary: "Health check endpoint failed"
+      description: "Health check for {{ $labels.instance }} has been failing for 2 minutes"
+
+  - alert: LivenessCheckFailed
+    expr: probe_success{job="blackbox-http", instance=~".*liveness.*"} == 0
+    for: 1m
+    labels:
+      severity: critical
+      service: block-watcher
+    annotations:
+      summary: "Liveness check failed - service needs restart"
+      description: "Liveness probe has been failing for 1 minute"
+
+  - alert: ReadinessCheckFailed
+    expr: probe_success{job="blackbox-http", instance=~".*readiness.*"} == 0
+    for: 3m
+    labels:
+      severity: warning
+      service: block-watcher
+    annotations:
+      summary: "Readiness check failed - service not ready for traffic"
+      description: "Readiness probe has been failing for 3 minutes"
+
+# System Resource Alerts
+- name: system-resources
+  rules:
+  - alert: HighCPUUsage
+    expr: |
+      (
+        100 - (avg by (instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)
+      ) > 80
+    for: 5m
+    labels:
+      severity: warning
+      service: system
+    annotations:
+      summary: "High CPU usage detected"
+      description: "CPU usage is {{ $value }}% on {{ $labels.instance }}"
+
+  - alert: HighDiskUsage
+    expr: |
+      (
+        (node_filesystem_size_bytes - node_filesystem_avail_bytes) / 
+        node_filesystem_size_bytes
+      ) > 0.9
+    for: 5m
+    labels:
+      severity: critical
+      service: system
+    annotations:
+      summary: "High disk usage detected"
+      description: "Disk usage is {{ $value | humanizePercentage }} on {{ $labels.instance }}"
+
+  - alert: OutOfMemory
+    expr: |
+      (
+        (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / 
+        node_memory_MemTotal_bytes
+      ) > 0.9
+    for: 5m
+    labels:
+      severity: critical
+      service: system
+    annotations:
+      summary: "High memory usage detected"
+      description: "Memory usage is {{ $value | humanizePercentage }} on {{ $labels.instance }}"
