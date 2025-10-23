@@ -26,7 +26,10 @@ spec:
         command: ["npx", "prisma", "db", "push"]
         env:
         - name: DATABASE_URL
-          value: "postgresql://postgres:password@postgres-service:5432/blockwatcher"
+          valueFrom:
+            secretKeyRef:
+              name: app-secret
+              key: DATABASE_URL
       containers:
       - name: block-watcher
         image: block-watcher:local
@@ -35,13 +38,19 @@ spec:
         - containerPort: 3000
           name: http
           protocol: TCP
+        envFrom:
+        - secretRef:
+            name: env-secret  # All variables from .env file
         env:
         - name: NODE_ENV
           value: "development"
         - name: PORT
           value: "3000"
         - name: DATABASE_URL
-          value: "postgresql://postgres:password@postgres-service:5432/blockwatcher"
+          valueFrom:
+            secretKeyRef:
+              name: app-secret
+              key: DATABASE_URL
         livenessProbe:
           httpGet:
             path: /api/health/liveness
