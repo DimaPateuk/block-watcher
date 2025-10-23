@@ -131,5 +131,5 @@ kubectl get servicemonitor -n observability
 **Clean restart:**
 ```bash
 kubectl delete namespace block-watcher observability
-./deploy-complete.sh
+cd .. && ./deploy-production.sh
 ```
