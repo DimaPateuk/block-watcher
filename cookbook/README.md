@@ -96,7 +96,7 @@ Follow this learning path:
 # 1. Clone and install
 git clone <repository>
 cd block-watcher
-npm install
+npm ci
 
 # 2. Setup database
 docker run -d --name db -p 5432:5432 \

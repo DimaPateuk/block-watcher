@@ -43,7 +43,7 @@ cd block-watcher
 
 ### 2. Install Dependencies
 ```bash
-npm install
+npm ci
 ```
 
 This installs:
@@ -454,7 +454,7 @@ npx prisma generate
 
 # Clean and reinstall
 rm -rf node_modules
-npm install
+npm ci
 npx prisma generate
 ```
 
@@ -468,7 +468,7 @@ NODE_ENV=test npx prisma migrate reset
 
 # Reinstall dependencies
 rm -rf node_modules package-lock.json
-npm install
+npm ci
 ```
 
 ### Module Not Found Errors

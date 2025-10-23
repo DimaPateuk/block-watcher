@@ -110,7 +110,7 @@ Read these files in order:
 ### Step 2: Local Development (1 hour)
 ```bash
 # Install dependencies
-npm install
+npm ci
 
 # Setup database (Docker)
 docker-compose up -d postgres
@@ -350,14 +350,14 @@ docker ps | grep postgres
 cat .env
 
 # Check dependencies
-npm install
+npm ci
 ```
 
 ### Tests failing
 ```bash
 # Clean install
 rm -rf node_modules package-lock.json
-npm install
+npm ci
 
 # Reset test database
 npm run test:e2e:cov

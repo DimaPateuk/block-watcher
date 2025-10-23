@@ -25,7 +25,7 @@ Common issues and solutions for Block Watcher.
 ```bash
 # 1. Clean install dependencies
 rm -rf node_modules package-lock.json
-npm install
+npm ci
 
 # 2. Rebuild
 npm run build
